@@ -1,36 +1,42 @@
-const user = [
+import { readFile, writeFile } from './json';
+import getReqData from './utils';
 
-  {
-    userId: 1,
-  },
-
-  {
-    userId: 2,
-  },
-
-  {
-    userId: 3,
-  },
-];
-
-const requestListenerJson = (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.writeHead(200);
-  const response = {};
-  switch (req.url) {
-    case '/':
-      response.data = {};
-      break;
-    case '/users':
-      response.data = user;
-
-      break;
-    default:
-      response.message = 'Not Found';
-      response.status = 404;
-      break;
+const requestListenerJson = async (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    res.writeHead(200);
+    const response = {};
+    if (req.method === 'GET') {
+      switch (req.url) {
+        case '/':
+          response.data = {};
+          break;
+        case '/getJson':
+          response.data = readFile();
+          break;
+        default:
+          response.message = 'Not Found';
+          response.status = 404;
+          break;
+      }
+    } else if (req.method === 'POST') {
+      const body = await getReqData(req);
+      req.body = body;
+      switch (req.url) {
+        case '/setJson':
+          response.data = writeFile(req.body);
+          break;
+        default:
+          response.message = 'Not Found';
+          response.status = 404;
+          break;
+      }
+    }
+    return res.end(JSON.stringify(response));
+  } catch (error) {
+    console.log('error :>> ', error);
+    return res.end(JSON.stringify(error));
   }
-  res.end(JSON.stringify(response));
 };
 
 export default requestListenerJson;
